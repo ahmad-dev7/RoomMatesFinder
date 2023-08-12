@@ -10,14 +10,5 @@ Welcome to **ShareSpace**, your ultimate solution for finding the perfect roomma
 - **Personalized Profiles**: Create a personalized profile to showcase your preferences and attract the ideal roommate.
 - **User-Friendly Experience**: Designed with a user-first approach, ShareSpace offers intuitive navigation and a polished interface.
 
-## Getting Started
-
-If you're new to Flutter development or starting your first Flutter project, you'll find helpful resources to guide you:
-
-- [Flutter Documentation](https://docs.flutter.dev/)
-- [Flutter Codelab](https://docs.flutter.dev/get-started/codelab)
-- [Flutter Cookbook](https://docs.flutter.dev/cookbook)
-
-For an in-depth understanding of ShareSpace's features and how to get the most out of them, refer to our comprehensive [online documentation](https://docs.sharespaceapp.com/).
 
 Happy room hunting with ShareSpace! 🏠🤝🌟
