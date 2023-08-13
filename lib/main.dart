@@ -1,12 +1,15 @@
 import 'dart:async';
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:share_space/screens/adding_room_screen.dart';
 import 'package:share_space/screens/home_screen.dart';
 import 'package:share_space/screens/instruction_screens.dart';
 import 'package:share_space/screens/mobile_login.dart';
+import 'package:share_space/screens/profile_screen.dart';
 import 'package:share_space/screens/registration_screen.dart';
 import 'package:share_space/screens/verification_screen.dart';
 
@@ -69,7 +72,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
         Navigator.pushReplacement(
           context,
           PageTransition(
-            child: const HomeScreen(),
+            child: const BottomNavigationBar(),
             type: PageTransitionType.fade,
             duration: const Duration(milliseconds: 200),
           ),
@@ -113,4 +116,55 @@ class _LoadingScreenState extends State<LoadingScreen> {
       ),
     );
   }
+}
+
+class BottomNavigationBar extends StatefulWidget {
+  const BottomNavigationBar({super.key});
+
+  @override
+  State<BottomNavigationBar> createState() => _BottomNavigationBarState();
+}
+
+class _BottomNavigationBarState extends State<BottomNavigationBar> {
+  List<Widget> items = const [
+    Icon(Icons.home, color: Colors.white),
+    Icon(Icons.add, color: Colors.white),
+    Icon(Icons.person, color: Colors.white),
+  ];
+  int index = 0;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      bottomNavigationBar: CurvedNavigationBar(
+        items: items,
+        backgroundColor: backgroundColor,
+        color: Colors.blueGrey,
+        buttonBackgroundColor: const Color(0xFF3D6E87),
+        animationDuration: const Duration(milliseconds: 300),
+        height: 60,
+        onTap: (selectedIndex) {
+          setState(() {
+            index = selectedIndex;
+          });
+        },
+      ),
+      body: Container(
+        height: double.infinity,
+        width: double.infinity,
+        alignment: Alignment.center,
+        color: Colors.transparent,
+        child: child(index: index),
+      ),
+    );
+  }
+}
+
+Widget child({required int index}) {
+  List<Widget> children = const [
+    HomeScreen(),
+    AddRoom(),
+    UserProfile(),
+  ];
+  return children[index];
 }

@@ -2,13 +2,11 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_swiper_view/flutter_swiper_view.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:share_space/main.dart';
-import 'package:share_space/screens/drawer_screen.dart';
 
 late double deviceWidth;
 
@@ -29,14 +27,8 @@ class _HomeScreenState extends State<HomeScreen> {
           await FirebaseFirestore.instance
               .collection('Rooms')
               .where(
-                searchTerm ??
-                    Filter.or(
-                      Filter('locality', isEqualTo: 'Mumbai'),
-                      Filter(
-                        'city',
-                        isEqualTo: 'Mumbai',
-                      ),
-                    ),
+                searchTerm ?? 'rent',
+                isGreaterThan: '0',
               )
               .get();
       // .where('gender', isEqualTo: 'Female')
@@ -83,19 +75,14 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       debugPrint('Error fetching data: $e');
     }
+    setState(() {
+      loadingData = false;
+    });
   }
 
   @override
   void initState() {
     getData();
-    Future.delayed(
-      const Duration(seconds: 5),
-      () {
-        setState(() {
-          loadingData = false;
-        });
-      },
-    );
     super.initState();
   }
 
@@ -106,7 +93,6 @@ class _HomeScreenState extends State<HomeScreen> {
     deviceWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: backgroundColor,
-      drawer: const DrawerBox(),
       body: ModalProgressHUD(
         inAsyncCall: loadingData,
         color: backgroundColor,
@@ -157,6 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(20),
           ),
           child: TextField(
+            textCapitalization: TextCapitalization.words,
             onChanged: (value) => setState(() {}),
             controller: inputController,
             style: const TextStyle(fontSize: 11, color: Colors.white),
@@ -205,6 +192,7 @@ class _HomeScreenState extends State<HomeScreen> {
               hintText: 'Find rooms by city or locality',
               hintStyle: const TextStyle(
                 color: Color(0xD38EA4A9),
+                fontSize: 10,
               ),
               prefixIcon: const Icon(
                 Icons.search,
@@ -372,59 +360,63 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         //* More details button
         InkWell(
-          child: Container(
-            width: 165,
-            height: 40,
-            decoration: BoxDecoration(
-              color: const Color(0x9F979A9C),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  'assets/images/question.png',
-                  color: Colors.black45,
-                  width: 25,
-                ),
-                const Text(
-                  '  More details',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 18,
+          child: Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5),
+              height: 40,
+              decoration: BoxDecoration(
+                color: const Color(0x9F979A9C),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'assets/images/question.png',
+                    color: Colors.black45,
+                    width: 25,
                   ),
-                ),
-              ],
+                  const Text(
+                    '  More details',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
         //* Contact Owner button
         InkWell(
           onTap: () {},
-          child: Container(
-            width: 165,
-            height: 40,
-            decoration: BoxDecoration(
-              color: const Color(0x5E0CCABE),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.phone,
-                  color: Colors.greenAccent,
-                ),
-                Text(
-                  '  Contact Owner',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
+          child: Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5),
+              height: 40,
+              decoration: BoxDecoration(
+                color: const Color(0x5E0CCABE),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.phone,
+                    color: Colors.greenAccent,
                   ),
-                ),
-              ],
+                  Text(
+                    '  Contact Owner',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         )
@@ -456,12 +448,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: color ?? Colors.white,
                     fontSize: 17,
                   )),
-              // TextSpan(
-              //   text: '/M',
-              //   style: TextStyle(
-              //     color: Colors.white54,
-              //   ),
-              // )
             ],
           ),
         ),

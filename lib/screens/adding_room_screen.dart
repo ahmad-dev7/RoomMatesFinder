@@ -239,63 +239,67 @@ class _AddRoomState extends State<AddRoom> {
                           ),
                   ),
                   // Submit button
-                  SizedBox(
-                    height: 50,
-                    child: styledButton(
-                      color: images.isNotEmpty
-                          ? buttonColor
-                          : Colors.blueGrey.shade800,
-                      onTap: () async {
-                        if (validateForm()) {
-                          setState(() {
-                            uploading = true;
-                          });
-                          try {
-                            for (var img in images) {
-                              var time = DateTime.now().microsecondsSinceEpoch;
-                              var user = auth.currentUser!.displayName;
-                              final storage = FirebaseStorage.instance;
-                              var path = 'images/$time$user.jpg';
-                              var file = File(img.path);
-                              var ref = storage.ref().child(path);
-                              await ref.putFile(file).whenComplete(() async {
-                                var downloadUrl = await ref.getDownloadURL();
-                                imageLinks.add(downloadUrl);
-                              });
-                            }
-                            addRoom();
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 40),
+                    child: SizedBox(
+                      height: 50,
+                      child: styledButton(
+                        color: images.isNotEmpty
+                            ? buttonColor
+                            : Colors.blueGrey.shade800,
+                        onTap: () async {
+                          if (validateForm()) {
                             setState(() {
-                              Toast.show('Room added successfully ✅',
-                                  duration: 4,
-                                  backgroundColor: Colors.black,
-                                  textStyle: const TextStyle(
-                                    color: Colors.green,
-                                    fontSize: 18,
-                                  ));
-                              uploading = false;
-                              Navigator.pushReplacement(
-                                context,
-                                PageTransition(
-                                  child: const HomeScreen(),
-                                  type: PageTransitionType.rightToLeft,
-                                  duration: const Duration(seconds: 1),
-                                ),
-                              );
+                              uploading = true;
                             });
-                          } catch (e) {
-                            debugPrint('$e');
+                            try {
+                              for (var img in images) {
+                                var time =
+                                    DateTime.now().microsecondsSinceEpoch;
+                                var user = auth.currentUser!.displayName;
+                                final storage = FirebaseStorage.instance;
+                                var path = 'images/$time$user.jpg';
+                                var file = File(img.path);
+                                var ref = storage.ref().child(path);
+                                await ref.putFile(file).whenComplete(() async {
+                                  var downloadUrl = await ref.getDownloadURL();
+                                  imageLinks.add(downloadUrl);
+                                });
+                              }
+                              addRoom();
+                              setState(() {
+                                Toast.show('Room added successfully ✅',
+                                    duration: 4,
+                                    backgroundColor: Colors.black,
+                                    textStyle: const TextStyle(
+                                      color: Colors.green,
+                                      fontSize: 18,
+                                    ));
+                                uploading = false;
+                                Navigator.pushReplacement(
+                                  context,
+                                  PageTransition(
+                                    child: const HomeScreen(),
+                                    type: PageTransitionType.rightToLeft,
+                                    duration: const Duration(seconds: 1),
+                                  ),
+                                );
+                              });
+                            } catch (e) {
+                              debugPrint('$e');
+                            }
+                          } else {
+                            debugPrint('fields are empty');
+                            Toast.show(
+                              '\nAll fields are necessary\n',
+                              duration: 3,
+                              gravity: Toast.center,
+                              backgroundRadius: 10,
+                            );
                           }
-                        } else {
-                          debugPrint('fields are empty');
-                          Toast.show(
-                            '\nAll fields are necessary\n',
-                            duration: 3,
-                            gravity: Toast.center,
-                            backgroundRadius: 10,
-                          );
-                        }
-                      },
-                      text: 'Submit',
+                        },
+                        text: 'Submit',
+                      ),
                     ),
                   ),
                 ],
@@ -320,6 +324,7 @@ class _AddRoomState extends State<AddRoom> {
       height: 42,
       color: city == null ? Colors.blueGrey.shade700 : Colors.blueGrey,
       child: TextField(
+        textCapitalization: TextCapitalization.words,
         style: const TextStyle(color: Colors.white, fontSize: 16),
         controller: localityController,
         decoration: InputDecoration(
@@ -464,21 +469,7 @@ class _AddRoomState extends State<AddRoom> {
       elevation: 0,
       title: const Text('Add new room'),
       centerTitle: true,
-      leading: IconButton(
-        onPressed: () {
-          Navigator.pushReplacement(
-            context,
-            PageTransition(
-              child: const HomeScreen(),
-              type: PageTransitionType.fade,
-              duration: Duration.zero,
-            ),
-          );
-          images.clear();
-          imageLinks.clear();
-        },
-        icon: const Icon(Icons.close),
-      ),
+      automaticallyImplyLeading: false,
     );
   }
 
@@ -516,6 +507,7 @@ class _AddRoomState extends State<AddRoom> {
 
   TextFormField descriptionInput(TextEditingController controller) {
     return TextFormField(
+      textCapitalization: TextCapitalization.words,
       keyboardType: TextInputType.multiline,
       textInputAction: TextInputAction.done,
       controller: descriptionController,
