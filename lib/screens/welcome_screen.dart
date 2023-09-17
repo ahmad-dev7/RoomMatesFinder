@@ -10,7 +10,6 @@ import 'package:share_space/components/styled_button.dart';
 import 'package:share_space/components/styled_inputfield.dart';
 import 'package:share_space/constants.dart';
 import 'package:share_space/main.dart';
-import 'package:share_space/screens/home_screen.dart';
 import 'package:share_space/screens/mobile_login.dart';
 import 'package:share_space/screens/registration_screen.dart';
 import 'package:toast/toast.dart';
@@ -174,7 +173,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                 Navigator.push(
                                   context,
                                   PageTransition(
-                                    child: const HomeScreen(),
+                                    child: const ScreensNavigatorMenu(),
                                     type: PageTransitionType.leftToRight,
                                   ),
                                 );

@@ -72,7 +72,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
         Navigator.pushReplacement(
           context,
           PageTransition(
-            child: const BottomNavigationBar(),
+            child: const ScreensNavigatorMenu(),
             type: PageTransitionType.fade,
             duration: const Duration(milliseconds: 200),
           ),
@@ -118,14 +118,14 @@ class _LoadingScreenState extends State<LoadingScreen> {
   }
 }
 
-class BottomNavigationBar extends StatefulWidget {
-  const BottomNavigationBar({super.key});
+class ScreensNavigatorMenu extends StatefulWidget {
+  const ScreensNavigatorMenu({super.key});
 
   @override
-  State<BottomNavigationBar> createState() => _BottomNavigationBarState();
+  State<ScreensNavigatorMenu> createState() => _ScreensNavigatorMenuState();
 }
 
-class _BottomNavigationBarState extends State<BottomNavigationBar> {
+class _ScreensNavigatorMenuState extends State<ScreensNavigatorMenu> {
   List<Widget> items = const [
     Icon(Icons.home, color: Colors.white),
     Icon(Icons.add, color: Colors.white),

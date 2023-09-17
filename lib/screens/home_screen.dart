@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:animations/animations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,8 @@ import 'package:flutter_swiper_view/flutter_swiper_view.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:share_space/main.dart';
+import 'package:rive/rive.dart';
+import 'package:toast/toast.dart';
 
 late double deviceWidth;
 
@@ -20,16 +23,15 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool loadingData = true;
   FirebaseAuth auth = FirebaseAuth.instance;
+  bool loadingImage = false;
   TextEditingController inputController = TextEditingController();
-  void getData({Filter? searchTerm}) async {
+  List<Widget> roomList = [];
+  getData({Filter? searchTerm}) async {
     try {
       QuerySnapshot<Map<String, dynamic>> querySnapshot =
           await FirebaseFirestore.instance
               .collection('Rooms')
-              .where(
-                searchTerm ?? 'rent',
-                isGreaterThan: '0',
-              )
+              .where(searchTerm ?? Filter('rent', isGreaterThan: '0'))
               .get();
       // .where('gender', isEqualTo: 'Female')
       if (querySnapshot.docs.isNotEmpty) {
@@ -86,37 +88,37 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
   }
 
-  List<Widget> roomList = [];
-
   @override
   Widget build(BuildContext context) {
     deviceWidth = MediaQuery.of(context).size.width;
+    ToastContext().init(context);
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: ModalProgressHUD(
-        inAsyncCall: loadingData,
-        color: backgroundColor,
-        blur: 2,
-        progressIndicator: const CircularProgressIndicator(
-          semanticsLabel: 'Fetching rooms',
-        ),
-        child: CustomScrollView(
-          slivers: [
-            sliverAppBar(),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 5),
+      body: CustomScrollView(
+        slivers: [
+          sliverAppBar(),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 5),
+              child: ModalProgressHUD(
+                inAsyncCall: loadingData,
+                color: backgroundColor,
+                blur: 2,
+                progressIndicator: const CircularProgressIndicator(
+                  semanticsLabel: 'Fetching rooms',
+                ),
                 child: Column(
                   children: roomList,
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
+
+// Scaffold Body ends here
 
   SliverAppBar sliverAppBar() {
     return SliverAppBar(
@@ -143,8 +145,30 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(20),
           ),
           child: TextField(
+            onEditingComplete: () {
+              roomList.clear();
+              setState(() {
+                loadingData = true;
+                getData(
+                    searchTerm: Filter.or(
+                  Filter('locality', isEqualTo: inputController.text),
+                  Filter(
+                    'city',
+                    isEqualTo: inputController.text,
+                  ),
+                ));
+              });
+            },
             textCapitalization: TextCapitalization.words,
-            onChanged: (value) => setState(() {}),
+            onChanged: (value) => setState(() {
+              inputController.text.isEmpty
+                  ? setState(() {
+                      loadingData = true;
+                      roomList.clear();
+                      getData();
+                    })
+                  : debugPrint(value);
+            }),
             controller: inputController,
             style: const TextStyle(fontSize: 11, color: Colors.white),
             decoration: InputDecoration(
@@ -152,9 +176,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 visible: inputController.text.isNotEmpty,
                 child: TextButton(
                   onPressed: () {
-                    loadingData = true;
+                    roomList.clear();
                     setState(() {
-                      roomList.clear();
+                      loadingData = true;
                       getData(
                           searchTerm: Filter.or(
                         Filter('locality', isEqualTo: inputController.text),
@@ -163,11 +187,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           isEqualTo: inputController.text,
                         ),
                       ));
-                      Timer(const Duration(milliseconds: 500), () {
-                        setState(() {
-                          loadingData = false;
-                        });
-                      });
                     });
                   },
                   child: Container(
@@ -257,6 +276,24 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> loadImage(String imageUrl) {
+    final completer = Completer<void>();
+    Image.network(imageUrl)
+        .image
+        .resolve(const ImageConfiguration())
+        .addListener(
+          ImageStreamListener(
+            (ImageInfo info, bool synchronousCall) {
+              completer.complete();
+            },
+            onError: (dynamic exception, StackTrace? stackTrace) {
+              completer.completeError(exception);
+            },
+          ),
+        );
+    return completer.future;
+  }
+
   Swiper imageContainer(List<dynamic> imageList) {
     return Swiper(
       pagination: const SwiperPagination(
@@ -277,12 +314,31 @@ class _HomeScreenState extends State<HomeScreen> {
       itemWidth: deviceWidth - 30,
       itemHeight: 250,
       loop: true,
-      autoplayDelay: 8000,
+      autoplayDelay: 60000,
       autoplay: true,
       duration: 500,
       scrollDirection: Axis.horizontal,
       itemBuilder: (BuildContext context, int index) {
-        return swiperContent(index, imageList);
+        return index == 0
+            ? FutureBuilder(
+                future: loadImage(imageList[index]),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 80,
+                      ),
+                      child: RiveAnimation.asset(
+                        'assets/images/loading2.riv',
+                      ),
+                    );
+                  } else {
+                    return swiperContent(index, imageList);
+                  }
+                },
+              )
+            : swiperContent(index, imageList);
       },
     );
   }
@@ -322,14 +378,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Padding infoRows({
-    required String rentAmount,
-    required String depositAmount,
-    required String memberType,
-    required String locality,
-    required String foodType,
-    required String gender,
-  }) {
+  Padding infoRows(
+      {required String rentAmount,
+      required String depositAmount,
+      required String memberType,
+      required String locality,
+      required String foodType,
+      required String gender}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       child: SizedBox(
@@ -346,7 +401,14 @@ class _HomeScreenState extends State<HomeScreen> {
             //*Third Row
             rowContent('Food', foodType, 'Gender', gender, Colors.white),
             //*Fourth Row
-            fourthRowInfo(),
+            fourthRowInfo(
+              rentAmount,
+              depositAmount,
+              memberType,
+              locality,
+              foodType,
+              gender,
+            ),
           ],
         ),
       ),
@@ -354,15 +416,59 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
 //* contact and more detail buttons
-  Row fourthRowInfo() {
+  Row fourthRowInfo(
+    String rentAmount,
+    String depositAmount,
+    String memberType,
+    String locality,
+    String foodType,
+    String gender,
+  ) {
+    Widget styledText(String text) {
+      return Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 18,
+        ),
+      );
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         //* More details button
-        InkWell(
-          child: Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 5),
+        OpenContainer(
+          closedColor: const Color(0x9F979A9C),
+          openBuilder: (context, action) {
+            return Scaffold(
+              backgroundColor: backgroundColor,
+              appBar: AppBar(
+                title: const Text('More Info'),
+                centerTitle: true,
+                automaticallyImplyLeading: true,
+                backgroundColor: primaryColor,
+              ),
+              body: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    styledText(rentAmount),
+                    styledText(depositAmount),
+                    styledText(memberType),
+                    styledText(locality),
+                    styledText(foodType),
+                    styledText(gender),
+                  ],
+                ),
+              ),
+            );
+          },
+          closedBuilder: (context, action) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               height: 40,
               decoration: BoxDecoration(
                 color: const Color(0x9F979A9C),
@@ -374,7 +480,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Image.asset(
                     'assets/images/question.png',
-                    color: Colors.black45,
+                    color: Colors.black54,
                     width: 25,
                   ),
                   const Text(
@@ -386,37 +492,37 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-            ),
-          ),
+            );
+          },
         ),
         //* Contact Owner button
         InkWell(
-          onTap: () {},
-          child: Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 5),
-              height: 40,
-              decoration: BoxDecoration(
-                color: const Color(0x5E0CCABE),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.phone,
-                    color: Colors.greenAccent,
+          onTap: () {
+            Toast.show(rentAmount);
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 5),
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(0x5E0CCABE),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.phone,
+                  color: Colors.greenAccent,
+                ),
+                Text(
+                  '  Contact Owner',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
                   ),
-                  Text(
-                    '  Contact Owner',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         )

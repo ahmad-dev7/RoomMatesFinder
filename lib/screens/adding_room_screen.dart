@@ -1,3 +1,5 @@
+// ignore_for_file: library_prefixes
+
 import 'package:csc_picker/csc_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -6,12 +8,14 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:rive/rive.dart';
 import 'package:share_space/components/styled_button.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:share_space/main.dart';
-import 'package:share_space/screens/home_screen.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:toast/toast.dart';
+import 'package:toast/toast.dart' as textToast;
 
 class AddRoom extends StatefulWidget {
   const AddRoom({super.key});
@@ -36,6 +40,7 @@ class _AddRoomState extends State<AddRoom> {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   FirebaseAuth auth = FirebaseAuth.instance;
   bool uploading = false;
+  bool loadingCSCPicker = true;
   pickImage() async {
     final List<XFile> pickedImages = await imagePicker.pickMultiImage();
     if (pickedImages.isNotEmpty) {
@@ -44,6 +49,16 @@ class _AddRoomState extends State<AddRoom> {
       }
       setState(() {});
     }
+  }
+
+  @override
+  void initState() {
+    Future.delayed(const Duration(milliseconds: 600)).then((value) {
+      setState(() {
+        loadingCSCPicker = false;
+      });
+    });
+    super.initState();
   }
 
   bool validateForm() {
@@ -86,8 +101,10 @@ class _AddRoomState extends State<AddRoom> {
 
   @override
   Widget build(BuildContext context) {
+    FToast widgetToast = FToast();
+    widgetToast.init(context);
     double deviceWidth = MediaQuery.of(context).size.width;
-    ToastContext().init(context);
+    textToast.ToastContext().init(context);
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: appBar(context),
@@ -100,7 +117,13 @@ class _AddRoomState extends State<AddRoom> {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(),
+            SizedBox(
+              height: 90,
+              width: 70,
+              child: RiveAnimation.asset(
+                'assets/images/feature_load.riv',
+              ),
+            ),
             SizedBox(height: 40),
             Text(
               'Adding room to Database...',
@@ -137,7 +160,9 @@ class _AddRoomState extends State<AddRoom> {
                     ),
                     child: Column(
                       children: [
-                        countryStateCityPicker(),
+                        loadingCSCPicker
+                            ? const CircularProgressIndicator()
+                            : countryStateCityPicker(),
                         localAreaInput(),
                       ],
                     ),
@@ -268,20 +293,26 @@ class _AddRoomState extends State<AddRoom> {
                               }
                               addRoom();
                               setState(() {
-                                Toast.show('Room added successfully ✅',
-                                    duration: 4,
-                                    backgroundColor: Colors.black,
-                                    textStyle: const TextStyle(
-                                      color: Colors.green,
-                                      fontSize: 18,
-                                    ));
+                                AudioPlayer player = AudioPlayer();
+                                widgetToast.showToast(
+                                  toastDuration: const Duration(seconds: 5),
+                                  gravity: ToastGravity.CENTER,
+                                  child: const RiveAnimation.asset(
+                                    'assets/images/success.riv',
+                                  ),
+                                );
+                                player.play(
+                                  AssetSource(
+                                    'assets/successAudio.mp3',
+                                  ),
+                                );
                                 uploading = false;
                                 Navigator.pushReplacement(
                                   context,
                                   PageTransition(
-                                    child: const HomeScreen(),
-                                    type: PageTransitionType.rightToLeft,
-                                    duration: const Duration(seconds: 1),
+                                    child: const ScreensNavigatorMenu(),
+                                    type: PageTransitionType.fade,
+                                    duration: const Duration(seconds: 5),
                                   ),
                                 );
                               });
@@ -290,10 +321,10 @@ class _AddRoomState extends State<AddRoom> {
                             }
                           } else {
                             debugPrint('fields are empty');
-                            Toast.show(
+                            textToast.Toast.show(
                               '\nAll fields are necessary\n',
                               duration: 3,
-                              gravity: Toast.center,
+                              gravity: textToast.Toast.center,
                               backgroundRadius: 10,
                             );
                           }
@@ -507,7 +538,7 @@ class _AddRoomState extends State<AddRoom> {
 
   TextFormField descriptionInput(TextEditingController controller) {
     return TextFormField(
-      textCapitalization: TextCapitalization.words,
+      textCapitalization: TextCapitalization.sentences,
       keyboardType: TextInputType.multiline,
       textInputAction: TextInputAction.done,
       controller: descriptionController,
