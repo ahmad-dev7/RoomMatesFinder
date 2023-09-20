@@ -14,6 +14,7 @@
     "oktoast",
     "Panvel",
     "Swiper",
+    "tappable",
     "ttwofs"
   ],
   "C_Cpp_Runner.cCompilerPath": "gcc",

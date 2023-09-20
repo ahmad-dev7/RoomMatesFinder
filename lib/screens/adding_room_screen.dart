@@ -90,6 +90,9 @@ class _AddRoomState extends State<AddRoom> {
       "member": member,
       "gender": gender,
       "description": descriptionController.text,
+      "mobileNumber": auth.currentUser!.phoneNumber,
+      "emailID": auth.currentUser!.email,
+      "ownerName": auth.currentUser!.displayName,
     });
   }
 

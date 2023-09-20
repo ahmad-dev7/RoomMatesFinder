@@ -44,8 +44,8 @@ class _HomeScreenState extends State<HomeScreen> {
           String depositAmount = data['deposit'];
           String rentAmount = data['rent'];
           String foodType = data['food'];
-          // String description = data['description'];
-          // String city = data['city'];
+          String description = data['description'];
+          String city = data['city'];
           setState(() {
             roomList.add(
               roomContainer(
@@ -55,6 +55,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 locality: locality,
                 foodType: foodType,
                 gender: gender,
+                description: description,
+                city: city,
                 imageList: imageList,
               ),
             );
@@ -235,42 +237,99 @@ class _HomeScreenState extends State<HomeScreen> {
     required String locality,
     required String foodType,
     required String gender,
+    required String description,
+    required String city,
     required List<dynamic> imageList,
   }) {
+    Text styledText(String text) {
+      return Text(
+        text,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 18,
+        ),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 25),
-      child: Container(
-        height: 450,
-        width: deviceWidth - 30,
-        decoration: BoxDecoration(
-          borderRadius: const BorderRadius.all(
-            Radius.circular(20),
-          ),
-          color: primaryColor,
-          boxShadow: const [
-            BoxShadow(
-              offset: Offset(0, 8),
-              blurRadius: 10,
-              spreadRadius: 4,
-              color: Color(0xFF182D37),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            //* Image container
-            imageContainer(imageList),
-            //* Details rows
-            infoRows(
-              rentAmount: rentAmount,
-              depositAmount: depositAmount,
-              memberType: memberType,
-              locality: locality,
-              foodType: foodType,
-              gender: gender,
-            )
-          ],
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: OpenContainer(
+          closedColor: backgroundColor,
+          middleColor: backgroundColor,
+          openColor: primaryColor,
+          transitionDuration: const Duration(seconds: 1),
+          tappable: false,
+          openBuilder: (context, action) {
+            return Scaffold(
+              backgroundColor: backgroundColor,
+              appBar: AppBar(
+                title: const Text('More Info'),
+                centerTitle: true,
+                automaticallyImplyLeading: true,
+                backgroundColor: primaryColor,
+              ),
+              body: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: styledText(description),
+                    ),
+                    styledText(city),
+                    styledText(rentAmount),
+                    styledText(depositAmount),
+                    styledText(gender),
+                    styledText(foodType),
+                    styledText(memberType),
+                    styledText(locality),
+                  ],
+                ),
+              ),
+            );
+          },
+          closedBuilder: (context, action) {
+            return Container(
+              height: 450,
+              width: deviceWidth - 30,
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.all(
+                  Radius.circular(20),
+                ),
+                color: primaryColor,
+                boxShadow: const [
+                  BoxShadow(
+                    offset: Offset(0, 8),
+                    blurRadius: 10,
+                    spreadRadius: 4,
+                    color: Color(0xFF182D37),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  //* Image container
+                  imageContainer(imageList),
+                  //* Details rows
+                  infoRows(
+                    action: action,
+                    rentAmount: rentAmount,
+                    depositAmount: depositAmount,
+                    memberType: memberType,
+                    locality: locality,
+                    foodType: foodType,
+                    gender: gender,
+                  )
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
@@ -379,7 +438,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Padding infoRows(
-      {required String rentAmount,
+      {required void Function() action,
+      required String rentAmount,
       required String depositAmount,
       required String memberType,
       required String locality,
@@ -402,12 +462,8 @@ class _HomeScreenState extends State<HomeScreen> {
             rowContent('Food', foodType, 'Gender', gender, Colors.white),
             //*Fourth Row
             fourthRowInfo(
+              action,
               rentAmount,
-              depositAmount,
-              memberType,
-              locality,
-              foodType,
-              gender,
             ),
           ],
         ),
@@ -416,85 +472,42 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
 //* contact and more detail buttons
-  Row fourthRowInfo(
-    String rentAmount,
-    String depositAmount,
-    String memberType,
-    String locality,
-    String foodType,
-    String gender,
-  ) {
-    Widget styledText(String text) {
-      return Text(
-        text,
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-          fontSize: 18,
-        ),
-      );
-    }
-
+  Row fourthRowInfo(void Function() action, String rentAmount) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         //* More details button
-        OpenContainer(
-          closedColor: const Color(0x9F979A9C),
-          openBuilder: (context, action) {
-            return Scaffold(
-              backgroundColor: backgroundColor,
-              appBar: AppBar(
-                title: const Text('More Info'),
-                centerTitle: true,
-                automaticallyImplyLeading: true,
-                backgroundColor: primaryColor,
-              ),
-              body: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    styledText(rentAmount),
-                    styledText(depositAmount),
-                    styledText(memberType),
-                    styledText(locality),
-                    styledText(foodType),
-                    styledText(gender),
-                  ],
+
+        InkWell(
+          onTap: action,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(0x9F979A9C),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/images/question.png',
+                  color: Colors.black54,
+                  width: 25,
                 ),
-              ),
-            );
-          },
-          closedBuilder: (context, action) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              height: 40,
-              decoration: BoxDecoration(
-                color: const Color(0x9F979A9C),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'assets/images/question.png',
-                    color: Colors.black54,
-                    width: 25,
+                const Text(
+                  '  More details',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 16,
                   ),
-                  const Text(
-                    '  More details',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
+                ),
+              ],
+            ),
+          ),
         ),
+
         //* Contact Owner button
         InkWell(
           onTap: () {
