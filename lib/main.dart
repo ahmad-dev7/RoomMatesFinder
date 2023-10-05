@@ -21,7 +21,7 @@ Color inputFieldColor = Colors.blueGrey;
 // This is the entry point of the application
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // checking if the it is running on web or not, if so then firebase will response accordingly
+  // checking if it is running on web or not, if so then firebase will response accordingly
   if (kIsWeb) {
     await Firebase.initializeApp(
       options: const FirebaseOptions(
@@ -116,6 +116,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           mainAxisSize: MainAxisSize.max,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // while in the backend firebase is cheking if user is logged in or not, the image is displayed to user
             Image(
               image: AssetImage('assets/images/app_icon.gif'),
             ),
@@ -126,6 +127,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
   }
 }
 
+// The bottom navigation menue which contains all screen routes, that is home, add room, and profile, form here user can switch between them
 class ScreensNavigatorMenu extends StatefulWidget {
   const ScreensNavigatorMenu({super.key});
 
@@ -168,6 +170,7 @@ class _ScreensNavigatorMenuState extends State<ScreensNavigatorMenu> {
   }
 }
 
+// This list widget contains all the screen routes and when this function is called this returns one child as per the index taken while calling the function
 Widget child({required int index}) {
   List<Widget> children = const [
     HomeScreen(),
