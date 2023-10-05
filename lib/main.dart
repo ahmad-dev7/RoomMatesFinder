@@ -18,8 +18,10 @@ Color primaryColor = const Color(0xFF354E5C);
 Color buttonColor = const Color(0xFF54E4C8);
 Color inputFieldColor = Colors.blueGrey;
 
+// This is the entry point of the application
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // checking if the it is running on web or not, if so then firebase will response accordingly
   if (kIsWeb) {
     await Firebase.initializeApp(
       options: const FirebaseOptions(
@@ -31,6 +33,7 @@ void main() async {
     );
   }
   await Firebase.initializeApp();
+  // Waiting for firebase to initialize app before running the application UI
   runApp(
     MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -46,6 +49,8 @@ void main() async {
   );
 }
 
+
+// While the data is being loading from firbase the loading screen is diplayed
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key});
 
@@ -61,6 +66,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
     Timer(
       const Duration(milliseconds: 2000),
       () {
+        // This function checks if the user is already logged in or the user came for the first time
         checkUser();
       },
     );
@@ -78,6 +84,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           ),
         );
       } else {
+        // if user have already logged in earlier then user gets redirected to the main home page
         Navigator.pushReplacement(
           context,
           PageTransition(
@@ -88,6 +95,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
         );
       }
     } else {
+      // if user came for the first time on this paplication they redirected to the instruction page
       Navigator.pushReplacement(
         context,
         PageTransition(
