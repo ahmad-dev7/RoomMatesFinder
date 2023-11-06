@@ -8,9 +8,11 @@ import 'package:share_space/components/styled_button.dart';
 import 'package:share_space/components/styled_inputfield.dart';
 import 'package:share_space/main.dart';
 import 'package:share_space/screens/verification_screen.dart';
+import 'package:share_space/screens/welcome_screen.dart';
 
 class MobileLogin extends StatefulWidget {
-  const MobileLogin({super.key});
+  final String? tittleText;
+  const MobileLogin({super.key, this.tittleText});
   @override
   State<MobileLogin> createState() => _MobileLoginState();
 }
@@ -94,8 +96,6 @@ class _MobileLoginState extends State<MobileLogin> {
                         if (auth.currentUser != null) {
                           setState(() {
                             progressIndicator = false;
-                            print(
-                                'Value of $progressIndicator, should be false');
                           });
                           Navigator.push(
                             context,
@@ -111,8 +111,6 @@ class _MobileLoginState extends State<MobileLogin> {
                         } else {
                           setState(() {
                             progressIndicator = false;
-                            print(
-                                'Value of $progressIndicator, should be false');
                           });
                           Navigator.push(
                             context,
@@ -192,16 +190,25 @@ class _MobileLoginState extends State<MobileLogin> {
     return AppBar(
       elevation: 0,
       backgroundColor: backgroundColor,
-      leading: InkWell(
-        onTap: () {
-          Navigator.pop(context);
-        },
-        child: const Icon(
-          Icons.close,
-        ),
-      ),
-      title: const Text(
-        'Continue with number',
+      automaticallyImplyLeading: false,
+      leading: widget.tittleText == null
+          ? const SizedBox()
+          : InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  PageTransition(
+                    child: const WelcomeScreen(),
+                    type: PageTransitionType.leftToRight,
+                  ),
+                );
+              },
+              child: const Icon(
+                Icons.close,
+              ),
+            ),
+      title: Text(
+        widget.tittleText ?? 'Please verify mobile number',
       ),
       centerTitle: true,
     );

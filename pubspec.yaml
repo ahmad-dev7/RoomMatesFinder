@@ -44,7 +44,7 @@ dependencies:
   flutter_swiper_view: ^1.1.8
   csc_picker: ^0.2.7
   image_picker: ^1.0.1
-  cloud_firestore: ^4.8.4
+  cloud_firestore: ^4.11.0
   firebase_storage: ^11.2.5
   introduction_screen: ^3.1.11
   curved_navigation_bar: ^1.0.3
@@ -52,6 +52,9 @@ dependencies:
   fluttertoast: ^8.2.2
   audioplayers: ^5.1.0
   animations: ^2.0.8
+  flutter_awesome_alert_box: ^2.1.1
+  rflutter_alert: ^2.0.7
+  url_launcher: ^6.2.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -179,7 +179,9 @@ class _RegistrationState extends State<Registration> {
                                 Navigator.push(
                                   context,
                                   PageTransition(
-                                    child: const MobileLogin(),
+                                    child: const MobileLogin(
+                                      tittleText: 'Verify Mobile Number',
+                                    ),
                                     type: PageTransitionType.topToBottom,
                                     duration: const Duration(milliseconds: 650),
                                   ),

@@ -1,20 +1,21 @@
-// ignore_for_file: library_prefixes
-
 import 'package:csc_picker/csc_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:rive/rive.dart';
+import 'package:share_space/components/bottom_navigation_menue.dart';
 import 'package:share_space/components/styled_button.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:share_space/main.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+// ignore: library_prefixes
 import 'package:toast/toast.dart' as textToast;
 
 class AddRoom extends StatefulWidget {
@@ -29,21 +30,35 @@ class _AddRoomState extends State<AddRoom> {
   TextEditingController rentController = TextEditingController();
   TextEditingController depositController = TextEditingController();
   TextEditingController localityController = TextEditingController();
+  TextEditingController memberCountController = TextEditingController();
+  TextEditingController nearbyPlaceController = TextEditingController();
+  TextEditingController religionController = TextEditingController();
+
   String gender = 'Gender';
   String member = 'Member';
   String food = 'Food';
   String? country;
   String? state;
   String? city;
-  final ImagePicker imagePicker = ImagePicker();
-  List<File> images = [];
+
+  var images = [];
+  List<Uint8List> webImages = [];
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   FirebaseAuth auth = FirebaseAuth.instance;
   bool uploading = false;
   bool loadingCSCPicker = true;
   pickImage() async {
+    final ImagePicker imagePicker = ImagePicker();
     final List<XFile> pickedImages = await imagePicker.pickMultiImage();
-    if (pickedImages.isNotEmpty) {
+
+    if (kIsWeb && pickedImages.isNotEmpty) {
+      for (var img in pickedImages) {
+        var webImg = await img.readAsBytes();
+        images.add(webImg);
+      }
+      setState(() {});
+    }
+    if (!kIsWeb && pickedImages.isNotEmpty) {
       for (var img in pickedImages) {
         images.add(File(img.path));
       }
@@ -67,6 +82,8 @@ class _AddRoomState extends State<AddRoom> {
         depositController.text.isNotEmpty &&
         rentController.text.isNotEmpty &&
         depositController.text.isNotEmpty &&
+        nearbyPlaceController.text.isNotEmpty &&
+        memberCountController.text.isNotEmpty &&
         food != 'Food' &&
         gender != 'Gender' &&
         member != 'Member' &&
@@ -93,6 +110,11 @@ class _AddRoomState extends State<AddRoom> {
       "mobileNumber": auth.currentUser!.phoneNumber,
       "emailID": auth.currentUser!.email,
       "ownerName": auth.currentUser!.displayName,
+      "number": auth.currentUser!.phoneNumber,
+      "postedBy": auth.currentUser!.displayName,
+      "nearBy": nearbyPlaceController.text,
+      "memberCount": memberCountController.text,
+      "religion": religionController.text,
     });
   }
 
@@ -139,7 +161,7 @@ class _AddRoomState extends State<AddRoom> {
             Text(
               'Please be patience, It may take several seconds',
               style: TextStyle(
-                color: Color(0x9BFFFFFF),
+                color: Color(0xCFFFFFFF),
                 backgroundColor: Colors.black,
               ),
             )
@@ -166,7 +188,12 @@ class _AddRoomState extends State<AddRoom> {
                         loadingCSCPicker
                             ? const CircularProgressIndicator()
                             : countryStateCityPicker(),
-                        localAreaInput(),
+                        addressInfoInput(
+                            'Enter local area', localityController),
+                        addressInfoInput(
+                            'Enter Nearby place', nearbyPlaceController),
+                        addressInfoInput(
+                            'Enter your Religion', religionController),
                       ],
                     ),
                   ),
@@ -187,6 +214,16 @@ class _AddRoomState extends State<AddRoom> {
                         label: 'Deposit',
                       ),
                     ],
+                  ),
+                  //Member count
+                  Container(
+                    alignment: Alignment.centerLeft,
+                    child: memberCountInput(
+                      deviceWidth: deviceWidth,
+                      width: deviceWidth / 2,
+                      controller: memberCountController,
+                      label: 'Member Count',
+                    ),
                   ),
                   // Food, Gender & Member picker row
                   Row(
@@ -258,10 +295,12 @@ class _AddRoomState extends State<AddRoom> {
                             crossAxisSpacing: 3,
                             children: images
                                 .map(
-                                  (img) => Image.file(
-                                    File(img.path),
-                                    fit: BoxFit.cover,
-                                  ),
+                                  (img) => kIsWeb
+                                      ? Image.memory(img, fit: BoxFit.cover)
+                                      : Image.file(
+                                          File(img.path),
+                                          fit: BoxFit.cover,
+                                        ),
                                 )
                                 .toList(),
                           ),
@@ -320,10 +359,9 @@ class _AddRoomState extends State<AddRoom> {
                                 );
                               });
                             } catch (e) {
-                              debugPrint('$e');
+                              textToast.Toast.show('$e');
                             }
                           } else {
-                            debugPrint('fields are empty');
                             textToast.Toast.show(
                               '\nAll fields are necessary\n',
                               duration: 3,
@@ -351,7 +389,8 @@ class _AddRoomState extends State<AddRoom> {
 
   List<String> imageLinks = [];
 
-  Container localAreaInput() {
+  Container addressInfoInput(
+      String hintText, TextEditingController textController) {
     return Container(
       margin: const EdgeInsets.only(top: 10),
       padding: const EdgeInsets.only(left: 10),
@@ -360,9 +399,9 @@ class _AddRoomState extends State<AddRoom> {
       child: TextField(
         textCapitalization: TextCapitalization.words,
         style: const TextStyle(color: Colors.white, fontSize: 16),
-        controller: localityController,
+        controller: textController,
         decoration: InputDecoration(
-          hintText: 'Enter local area eg. Belapur',
+          hintText: hintText,
           hintStyle: const TextStyle(color: Colors.white70),
           border: InputBorder.none,
           enabled: city == null ? false : true,
@@ -387,7 +426,7 @@ class _AddRoomState extends State<AddRoom> {
       onCityChanged: (pickedCity) {
         city = pickedCity;
         setState(() {});
-        print('$country,\n $state,\n $city');
+        debugPrint('$country,\n $state,\n $city');
       },
     );
   }
@@ -569,4 +608,37 @@ class _AddRoomState extends State<AddRoom> {
       ),
     );
   }
+}
+
+SizedBox memberCountInput({
+  required double deviceWidth,
+  required TextEditingController controller,
+  required String label,
+  double? width,
+}) {
+  return SizedBox(
+    height: 55,
+    width: width ?? deviceWidth / 2.5,
+    child: TextField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      inputFormatters: [LengthLimitingTextInputFormatter(2)],
+      style: const TextStyle(color: Colors.white, fontSize: 18),
+      decoration: InputDecoration(
+        prefixIcon: const Icon(
+          Icons.group,
+          color: Color(0xFF80C1B4),
+          size: 18,
+        ),
+        enabledBorder: const OutlineInputBorder(
+          borderSide: BorderSide(
+            color: Colors.blueGrey,
+          ),
+        ),
+        labelStyle: const TextStyle(color: Colors.white70),
+        labelText: label,
+        border: const OutlineInputBorder(),
+      ),
+    ),
+  );
 }

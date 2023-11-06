@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:share_space/components/bottom_navigation_menue.dart';
 import 'package:share_space/components/styled_button.dart';
 import 'package:share_space/components/styled_inputfield.dart';
 import 'package:share_space/constants.dart';
@@ -103,7 +104,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             Navigator.push(
                               context,
                               PageTransition(
-                                child: const MobileLogin(),
+                                child: const MobileLogin(
+                                  tittleText: 'Continue with mobile number',
+                                ),
                                 type: PageTransitionType.rightToLeft,
                               ),
                             );
@@ -170,13 +173,28 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                 setState(() {
                                   progressIndicator = false;
                                 });
-                                Navigator.push(
-                                  context,
-                                  PageTransition(
-                                    child: const ScreensNavigatorMenu(),
-                                    type: PageTransitionType.leftToRight,
-                                  ),
-                                );
+                                String? phoneNumber = FirebaseAuth
+                                    .instance.currentUser!.phoneNumber;
+                                debugPrint(phoneNumber);
+                                if (phoneNumber != null) {
+                                  Navigator.push(
+                                    context,
+                                    PageTransition(
+                                      child: const ScreensNavigatorMenu(),
+                                      type: PageTransitionType.leftToRight,
+                                    ),
+                                  );
+                                } else {
+                                  Navigator.push(
+                                    context,
+                                    PageTransition(
+                                      child: const MobileLogin(
+                                        tittleText: 'Please link your number',
+                                      ),
+                                      type: PageTransitionType.leftToRight,
+                                    ),
+                                  );
+                                }
                               }
                             } catch (exception) {
                               String error = 'Please try again';
